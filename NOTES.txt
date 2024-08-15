@@ -1,0 +1,9 @@
+Course reference => https://www.udemy.com/course/fastapi-the-complete-course/
+
+#! Create a Virtual Environment
+1. python3 -m venv venv
+2. venv\Scripts\activate
+3. Install all requirements
+4. pip freeze > requirements.txt
+5. pip install -r requirements.txt
+4. pip list
