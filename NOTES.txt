@@ -3,7 +3,281 @@ Course reference => https://www.udemy.com/course/fastapi-the-complete-course/
 #! Create a Virtual Environment
 1. python3 -m venv venv
 2. venv\Scripts\activate
-3. Install all requirements
+3. Install all requirements => pip install fastapi, pip install "uvicorn[standard]", pip install "fastapi[standard]"
 4. pip freeze > requirements.txt
 5. pip install -r requirements.txt
 4. pip list
+
+#? Project - 1
+
+#! Create First FastAPI endpoint
+1. Create a python file named books.py inside a folder named "Project-1"
+"
+from fastapi import Body, FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+async def first_api():
+    return {"message": "Hello World"}
+"
+2. Run uvicorn Project-1.books:app --reload
+3. More detailed way to run the server => uvicorn Project-1.books:app --reload --host 127.0.0.1 --port 8000
+
+#* Since you have installed fastapi[standard] package, you can also use " fastapi dev .\Project-1\books.py" for running the server using fastapi-cli
+"
+(venv) PS D:\FastAPI - The Complete Course 2024 (Beginner + Advanced)> fastapi dev .\Project-1\books.py
+INFO     Using path Project-1\books.py
+INFO     Resolved absolute path D:\FastAPI - The Complete Course 2024 (Beginner + Advanced)\Project-1\books.py
+INFO     Searching for package file structure from directories with __init__.py files
+INFO     Importing from D:\FastAPI - The Complete Course 2024 (Beginner + Advanced)\Project-1
+
+ ╭─ Python module file ─╮
+ │                      │
+ │  🐍 books.py         │
+ │                      │
+ ╰──────────────────────╯
+
+INFO     Importing module books
+INFO     Found importable FastAPI app
+
+ ╭─ Importable FastAPI app ─╮
+ │                          │
+ │  from books import app   │
+ │                          │
+ ╰──────────────────────────╯
+
+INFO     Using import string books:app
+
+ ╭────────── FastAPI CLI - Development mode ───────────╮
+ │                                                     │
+ │  Serving at: http://127.0.0.1:8000                  │
+ │                                                     │
+ │  API docs: http://127.0.0.1:8000/docs               │
+ │                                                     │
+ │  Running in development mode, for production use:   │
+ │                                                     │
+ │  fastapi run                                        │
+ │                                                     │
+ ╰─────────────────────────────────────────────────────╯
+
+INFO:     Will watch for changes in these directories: ['D:\\FastAPI - The Complete Course 2024 (Beginner + Advanced)']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [15760] using WatchFiles
+INFO:     Started server process [18512]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+"
+
+* For Development Mode use: fastapi dev
+* For Production Mode use: fastapi run
+
+#! Enhance GET request
+"
+from fastapi import Body, FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+async def first_api():
+    return {"message": "Hello World"}
+
+
+BOOKS = [
+    {"title": "Title One", "author": "Author One", "category": "science"},
+    {"title": "Title Two", "author": "Author Two", "category": "science"},
+    {"title": "Title Three", "author": "Author Three", "category": "history"},
+    {"title": "Title Four", "author": "Author Four", "category": "math"},
+    {"title": "Title Five", "author": "Author Five", "category": "math"},
+    {"title": "Title Six", "author": "Author Two", "category": "math"},
+]
+
+
+@app.get("/books")
+async def read_all_books():
+    return BOOKS
+"
+
+#! Path Parameters - Making URL dynamic
+1. Path Parameters are request parameters that have been attached to the URL
+2. Path Parameters are usually defined as a way to find information based on location
+3. Order of typing and placing the api in the code file matters in Path Parameters
+"
+from fastapi import Body, FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+async def first_api():
+    return {"message": "Hello World"}
+
+@app.get("/test/{dynamic_param}")
+async def second_api(dynamic_param):
+    return {"message": dynamic_param}
+
+
+BOOKS = [
+    {"title": "Title One", "author": "Author One", "category": "science"},
+    {"title": "Title Two", "author": "Author Two", "category": "science"},
+    {"title": "Title Three", "author": "Author Three", "category": "history"},
+    {"title": "Title Four", "author": "Author Four", "category": "math"},
+    {"title": "Title Five", "author": "Author Five", "category": "math"},
+    {"title": "Title Six", "author": "Author Two", "category": "math"},
+]
+
+
+@app.get("/books")
+async def read_all_books():
+    return BOOKS
+
+@app.get("/books/mybook")
+async def read_my_book():
+    return {"title": "My favorite book"}
+
+
+@app.get("/books/{book_title}")
+async def read_book(book_title: str):
+    for book in BOOKS:
+        if book.get('title').casefold() == book_title.casefold():
+            return book
+"
+
+#! Query Parameters - Making URL dynamic
+1. Query Parameters are request parameters that have been attached after a “?”
+2. Query Parameters have name=value pairs
+3. Example => 127.0.0.1:8000/books/?category=math/
+"
+# http://127.0.0.1:8000/books/?category=math
+@app.get("/books/")
+async def read_category_by_query(category: str):
+    books_to_return = []
+    for book in BOOKS:
+        if book.get('category').casefold() == category.casefold():
+            books_to_return.append(book)
+    return books_to_return
+
+
+# http://127.0.0.1:8000/books/author%20one/?category=science
+@app.get("/books/{book_author}/")
+async def read_author_category_by_query(book_author: str, category: str):
+    books_to_return = []
+    for book in BOOKS:
+        if book.get('author').casefold() == book_author.casefold() and book.get('category').casefold() == category.casefold():
+            books_to_return.append(book)
+
+    return books_to_return
+"
+
+#! POST Request
+"
+@app.post("/books/create_book")
+async def create_book(new_book=Body()):
+    print(new_book)
+    BOOKS.append(new_book)
+    print(BOOKS)
+"
+
+#! PUT Request
+"
+@app.put("/books/update_book")
+async def update_book(updated_book=Body()):
+    for i in range(len(BOOKS)):
+        if BOOKS[i].get('title').casefold() == updated_book.get('title').casefold():
+            BOOKS[i] = updated_book
+"
+
+#! DELETE Request
+"
+@app.delete("/books/delete_book/{book_title}")
+async def delete_book(book_title: str):
+    for i in range(len(BOOKS)):
+        if BOOKS[i].get('title').casefold() == book_title.casefold():
+            BOOKS.pop(i)
+            break
+"
+
+#TODO => Assignment
+1. Create a new API Endpoint that can fetch all books from a specific author using either Path Parameters or Query Parameters.
+"
+'''
+Get all books from a specific author using path or query parameters
+'''
+
+# http://127.0.0.1:8000/test/assignment/?query_param_author=author%20two
+@app.get("/test/assignment/")
+async def read_all_books_by_author_query(query_param_author: str):
+    books_to_return = []
+    for book in BOOKS:
+        if book.get('author').casefold() == query_param_author.casefold():
+            books_to_return.append(book)
+
+    return books_to_return
+
+# http://127.0.0.1:8000/test/assignment/author%20two/
+@app.get("/test/assignment/{path_param_author}/")
+async def read_all_books_by_author_path(path_param_author: str):
+    books_to_return = []
+    for book in BOOKS:
+        if book.get('author').casefold() == path_param_author.casefold():
+            books_to_return.append(book)
+
+    return books_to_return
+"
+
+-----------------------------------------------------------------------------------------------
+
+#? Project 2
+• Project two will still be focused on creating Book API Endpoints
+• Continued Education includes: 
+• GET, POST, PUT, DELETE Request Methods
+• New Information will include: 
+• Data Validation, Exception Handling, Status Codes, Swagger Configuration, Python Request Objects
+
+#? Pydantic v1 vs Pydantic v2
+FastAPI is now compatible with both Pydantic v1 and Pydantic v2.
+Based on how new the version of FastAPI you are using, there could be small method name changes.
+
+The three biggest are:
+• .dict() function is now renamed to .model_dump()
+• schema_extra function within a Config class is now renamed to json_schema_extra
+• Optional variables need a =None example: id: Optional[int] = None
+
+#! Setup Project - 2
+1. Create a directory named "Project-2" and create a new python file named "books2.py"
+2. Run the server using "fastapi dev .\Project-2\books2.py"
+"
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+class Book:
+    id: int
+    title: str
+    author: str
+    description: str
+    rating: int
+
+    def __init__(self, id, title, author, description, rating):
+        self.id = id
+        self.title = title
+        self.author = author
+        self.description = description
+        self.rating = rating
+
+
+BOOKS = [
+    Book(1, 'Computer Science Pro', 'codingwithroby', 'A very nice book!', 5),
+    Book(2, 'Be Fast with FastAPI', 'codingwithroby', 'A great book!', 5),
+    Book(3, 'Master Endpoints', 'codingwithroby', 'A awesome book!', 5),
+    Book(4, 'HP1', 'Author 1', 'Book Description', 2),
+    Book(5, 'HP2', 'Author 2', 'Book Description', 3),
+    Book(6, 'HP3', 'Author 3', 'Book Description', 1)
+]
+
+
+@app.get("/books")
+async def read_all_books():
+    return BOOKS
+"
+
