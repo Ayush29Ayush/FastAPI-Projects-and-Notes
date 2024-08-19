@@ -722,3 +722,75 @@ async def delete_book(book_id: int = Path(gt=0)):
     if not book_changed:
         raise HTTPException(status_code=404, detail='Item not found')
 "
+
+-----------------------------------------------------------
+
+#? Project - 3
+• Project three we will be switching our focus to TODOS instead of BOOKS
+• New Information will include: 
+• Full SQL Database
+• Authentication
+• Authorization
+• Hashing Passwords
+
+#! MySQL Database Intro
+• Organized collection of structured information of data, which is stored in a computer system.
+• The data can be easily accessed
+• The data can be modified
+• The data can be controlled and organized
+• Many databases use a structured query language (SQL) to modify and write data
+
+• A database is a collection of data
+• Since data, on its own, is just data. A database allows management of this data
+• Databases are organized in how data can be retrieved, stored and modified
+• There are many types of Database Management Systems -> MySQL, PostgreSQL, SQLite, MongoDB
+
+#! Database Connection with ORM SQLAlchemy
+* ORM is an object-relational mapper
+* ORM is a library that allows us to interact with our database and perform CRUD and other database operations.
+* Now run => pip install sqlalchemy 
+* Now create a TodoApp directory and then a py file named database.py
+"
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+
+SQLALCHEMY_DATABASE_URL = 'sqlite:///./todosapp.db'
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False})
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+"
+
+#! Database Tables (Models)
+1. Inside the TodoApp directory, create a models.py file 
+2. Since this is also a ORM based application, we have models similar to what we have in django
+"
+from database import Base
+from sqlalchemy import Column, Integer, String, Boolean
+
+class Todos(Base):
+    __tablename__ = 'todos'
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    priority = Column(Integer)
+    complete = Column(Boolean, default=False)
+"
+
+#! Main (Create Database Connection for API)
+1. Create a main.py file
+"
+from fastapi import FastAPI
+import models
+from database import engine
+
+app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
+"
+2. Now run => fastapi dev .\Project-3\TodoApp\main.py
+3. Your db will be created automatically
