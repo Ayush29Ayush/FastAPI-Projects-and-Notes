@@ -6,10 +6,14 @@ import models
 from models import Todos
 from database import engine, SessionLocal
 from starlette import status
+from routers import auth
 
 app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
+
+# This is similar to django routers, the endpoints of the main app will now also have the endpoints of the auth app
+app.include_router(auth.router)
 
 # This creates a connection with the db, then selects the data to the client and then closes the connection. This makes fastapi very fast and efficient.
 def get_db():
