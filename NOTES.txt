@@ -883,3 +883,47 @@ async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
     
     db.commit()
 "
+
+#! Starting Authentication and Authorization
+1. Create a auth.py file
+"
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/auth/")
+async def get_user():
+    return {'user': 'authenticated'}
+"
+
+#! Routers Scale Authentication File
+1. Create a directory named routers.
+2. Move the auth.py file to the routers directory
+** auth.py
+"
+from fastapi import FastAPI, APIRouter
+
+# app = FastAPI()
+
+# @app.get("/auth/")
+# async def get_user():
+#     return {'user': 'authenticated'}
+
+router = APIRouter()
+
+@router.get("/auth/")
+async def get_user():
+    return {'user': 'authenticated'}
+"
+** main.py (Add these changes to main.py)
+"
+from routers import auth
+
+app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
+
+# This is similar to django routers, the endpoints of the main app will now also have the endpoints of the auth app
+app.include_router(auth.router)
+"
+3. Now in swagger, we have routers of main.py along with auth.py
