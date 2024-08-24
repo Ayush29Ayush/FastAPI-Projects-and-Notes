@@ -1032,3 +1032,432 @@ models.Base.metadata.create_all(bind=engine)
 app.include_router(auth.router)
 app.include_router(todos.router)
 "
+
+#! One to Many Relationship
+User ---> Todo (One to Many) possible
+but Todo ---> User (Many to One) not possible
+
+User will have the primary_key (id) and Todo will have the foreign_key (id of the user)
+
+#! WHAT IS A FOREIGN KEY?
+* A foreign key (FK) is a column within a relational database table that provides a link between two separate tables.
+* A foreign key references a primary key of another table
+* Most relational databases need foreign keys to be able to link tables together to present data
+
+#! Users table Creation
+**models.py
+"
+from database import Base
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+
+
+class Users(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True)
+    username = Column(String, unique=True)
+    first_name = Column(String)
+    last_name = Column(String)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    role = Column(String)
+
+
+class Todos(Base):
+    __tablename__ = 'todos'
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    priority = Column(Integer)
+    complete = Column(Boolean, default=False)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+"
+
+#! Create First User
+** auth.py
+"
+from fastapi import FastAPI, APIRouter
+from pydantic import BaseModel
+from models import Users
+
+# app = FastAPI()
+
+router = APIRouter()
+
+
+class CreateUserRequest(BaseModel):
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    password: str
+    role: str
+
+
+@router.post("/auth")
+async def create_user(create_user_request: CreateUserRequest):
+    create_user_model = Users(
+        email=create_user_request.email,
+        username=create_user_request.username,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        role=create_user_request.role,
+        hashed_password=create_user_request.password,
+        is_active=True,
+    )
+
+    return create_user_model
+"
+
+#! Hash User's Password
+* pip install passlib
+* pip install bcrypt==4.0.1
+** auth.py
+"
+from fastapi import FastAPI, APIRouter
+from pydantic import BaseModel
+from models import Users
+from passlib.context import CryptContext
+
+# app = FastAPI()
+
+router = APIRouter()
+
+bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class CreateUserRequest(BaseModel):
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    password: str
+    role: str
+
+
+@router.post("/auth")
+async def create_user(create_user_request: CreateUserRequest):
+    create_user_model = Users(
+        email=create_user_request.email,
+        username=create_user_request.username,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        role=create_user_request.role,
+        # hashed_password=create_user_request.password,
+        hashed_password=bcrypt_context.hash(create_user_request.password),
+    )
+
+    return create_user_model
+"
+
+#! Save User Record to Database
+** auth.py
+"
+from typing import Annotated
+from fastapi import FastAPI, APIRouter, Depends
+from pydantic import BaseModel
+from models import Users
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+from database import SessionLocal
+from starlette import status
+
+router = APIRouter()
+
+bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class CreateUserRequest(BaseModel):
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    password: str
+    role: str
+    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+db_dependency = Annotated[Session, Depends(get_db)]
+
+
+@router.post("/auth", status_code=status.HTTP_201_CREATED)
+async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
+    create_user_model = Users(
+        email=create_user_request.email,
+        username=create_user_request.username,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        role=create_user_request.role,
+        hashed_password=bcrypt_context.hash(create_user_request.password),
+        is_active=True
+    )
+
+    db.add(create_user_model)
+    db.commit()
+"
+
+#! Authenticate a User
+* pip install python-multipart
+* This package gives us the functionality of enter email and password for authentication
+** auth.py
+"
+from typing import Annotated
+from fastapi import FastAPI, APIRouter, Depends
+from pydantic import BaseModel
+from models import Users
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+from database import SessionLocal
+from starlette import status
+from fastapi.security import OAuth2PasswordRequestForm
+
+router = APIRouter()
+
+bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class CreateUserRequest(BaseModel):
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    password: str
+    role: str
+    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+db_dependency = Annotated[Session, Depends(get_db)]
+
+def authenticate_user(username: str, password: str, db):
+    user = db.query(Users).filter(Users.username == username).first()
+    if not user:
+        return False
+    if not bcrypt_context.verify(password, user.hashed_password):
+        return False
+    return user
+
+
+@router.post("/auth", status_code=status.HTTP_201_CREATED)
+async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
+    create_user_model = Users(
+        email=create_user_request.email,
+        username=create_user_request.username,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        role=create_user_request.role,
+        hashed_password=bcrypt_context.hash(create_user_request.password),
+        is_active=True
+    )
+
+    db.add(create_user_model)
+    db.commit()
+
+# form_data: This parameter will be automatically populated with data from the request form. FastAPI uses OAuth2PasswordRequestForm to know what kind of data to expect.
+# OAuth2PasswordRequestForm: This is a class provided by FastAPI. It’s a special form class used to handle OAuth2 password grant flow. It expects data in a specific format, typically including fields like username and password.
+@router.post("/token")
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
+    
+    user = authenticate_user(form_data.username, form_data.password, db)
+    
+    if not user:
+        return "Failed Authentication"
+    
+    print("User's username: ", form_data.username, "  ", "User's password: ", form_data.password)
+    return "Successful Authentication"
+"
+
+------------------------------------------------
+
+#! WHAT IS A JSON WEB TOKEN?
+* JSON Web Token is a self-contained way to securely transmit data and information between two parties using a JSON Object.
+* JSON Web Tokens can be trusted because each JWT can be digitally signed, which in return allows the server to know if the JWT has been changed at all
+* JWT should be used when dealing with authorization
+* JWT is a great way for information to be exchanged between the server and client
+* A JSON Web Token is created of three separate parts separated by dots ( . ) which include:
+■ Header : (a)
+■ Payload : (b)
+■ Signature : (c)
+
+Together they form the JWT : aaaaa.bbbbb.ccccc
+
+#! a) JWT Header
+A JWT header usually consist of two parts:
+■ (alg) The algorithm for signing
+■ “typ” The specific type of token
+{
+    "alg": "HS256",
+    "typ": "JWT"
+}
+■ The JWT header is then encoded using Base64 to create the first part of the JWT (a)
+
+#! b) JWT Payload
+■ A JWT Payload consists of the data. 
+{
+    "sub": "1234567890",
+    "name": "John Doe",
+    "email": "XQn5z@example.com",
+    "admin": true   
+}
+The Payloads data contains claims, and 
+there are three different types of claims.
+a) Registered
+b) Public
+c) Private
+■ The JWT Payload is then encoded using Base64 to create the second part of the JWT (b)
+
+#! c) JWT Signature
+■ A JWT Signature is created by using the algorithm in the header to hash out the encoded header, encoded payload with a secret.
+■ The secret can be anything, but is saved somewhere on the server that the client does not have access to.
+■ The signature is the third and final part of a JWT (c)
+
+----------------------------------------
+
+#! Encode a JWT
+* pip install "python-jose[cryptography]" => For encoding a JWT
+* This package contains jwt functionality to encode a JWT and needs a secret_key and algorithm
+** auth.py
+"
+from datetime import timedelta, timezone, datetime
+from typing import Annotated
+from fastapi import FastAPI, APIRouter, Depends
+from pydantic import BaseModel
+from models import Users
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+from database import SessionLocal
+from starlette import status
+from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt
+
+router = APIRouter()
+
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+
+bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class CreateUserRequest(BaseModel):
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    password: str
+    role: str
+    
+    
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+db_dependency = Annotated[Session, Depends(get_db)]
+
+def authenticate_user(username: str, password: str, db):
+    user = db.query(Users).filter(Users.username == username).first()
+    if not user:
+        return False
+    if not bcrypt_context.verify(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(username: str, user_id: int, role: str, expires_delta: timedelta):
+    encode = {'sub': username, 'id': user_id, 'role': role}
+    expires = datetime.now(timezone.utc) + expires_delta
+    encode.update({'exp': expires})
+    return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+@router.post("/auth", status_code=status.HTTP_201_CREATED)
+async def create_user(db: db_dependency,create_user_request: CreateUserRequest):
+    create_user_model = Users(
+        email=create_user_request.email,
+        username=create_user_request.username,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        role=create_user_request.role,
+        hashed_password=bcrypt_context.hash(create_user_request.password),
+        is_active=True
+    )
+
+    db.add(create_user_model)
+    db.commit()
+
+# form_data: This parameter will be automatically populated with data from the request form. FastAPI uses OAuth2PasswordRequestForm to know what kind of data to expect.
+# OAuth2PasswordRequestForm: This is a class provided by FastAPI. It’s a special form class used to handle OAuth2 password grant flow. It expects data in a specific format, typically including fields like username and password.
+# response_model: This parameter specifies the type of data that will be returned in the response.
+@router.post("/token", response_model=Token)
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
+    
+    user = authenticate_user(form_data.username, form_data.password, db)
+    
+    if not user:
+        print("Failed Authentication")
+        return "Failed Authentication"
+    
+    token  = create_access_token(user.username, user.id, user.role, timedelta(minutes=20))
+    
+    print("Successful Authentication")
+    print("User's username: ", form_data.username, "  ", "User's password: ", form_data.password)
+    return {"access_token": token, "token_type": "bearer"}
+"
+
+#! Decode a JWT
+* By decoding the JWT only we can authenticate and can get the username, user_id, and role of the user
+"
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get('sub')
+        user_id: int = payload.get('id')
+        user_role: str = payload.get('role')
+        if username is None or user_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail='Could not validate user.')
+        
+        return {'username': username, 'id': user_id, 'user_role': user_role}
+    
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail='Could not validate user.')
+"
+
+
+#TODO => Go to jwt.io and paste this access key "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5cQ"
+
+We get:- 
+
+HEADER:ALGORITHM & TOKEN TYPE
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+PAYLOAD:DATA
+{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "iat": 1516239022
+}
+VERIFY SIGNATURE
+HMACSHA256(
+  base64UrlEncode(header) + "." +
+  base64UrlEncode(payload),
+  "*****" your-256-bit-secret
+) secret base64 encoded
