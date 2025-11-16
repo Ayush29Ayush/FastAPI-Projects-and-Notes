@@ -51,6 +51,10 @@ BOOKS = [
     Book(6, 'HP3', 'Author 3', 'Book Description', 1, 2024)
 ]
 
+@app.get("/books/deprecated/", status_code=status.HTTP_200_OK, deprecated=True)
+async def read_all_books():
+    return BOOKS
+
 
 @app.get("/books", status_code=status.HTTP_200_OK)
 async def read_all_books():
