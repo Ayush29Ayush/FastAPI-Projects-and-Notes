@@ -826,6 +826,29 @@ async def read_all(db: db_dependency):
     return db.query(Todos).all()
 "
 
+#? Explanation for the above code:
+"
+- **FastAPI app**: Handles web requests.
+- **models.Base.metadata.create_all(bind=engine)**: Ensures all database tables are created at startup.
+- **get_db() function**:
+  - Opens a database session (`db = SessionLocal()`).
+  - Uses `yield` so FastAPI can handle setup/teardown like a context manager.
+  - Closes the session automatically after the request.
+- **Dependency Injection**:
+  - `db_dependency = Annotated[Session, Depends(get_db)]` is a shortcut for clean route type hints and dependency injection.
+  - In a route, `db: db_dependency` tells FastAPI to run `get_db()`, inject a Session, and clean up afterward.
+- **Route example** (`@app.get("/")`):
+  - Receives a DB session from the dependency.
+  - Runs a query (`db.query(Todos).all()`) to fetch all Todos.
+  - Returns the result as JSON.
+- **Why this pattern**:
+  - Every request gets a fresh, isolated session—no sharing, no leaks.
+  - Sessions are always closed, preventing bugs.
+  - Keeps the code clean, testable, and DRY (no repeated open/close logic).
+- **Summary**:  
+  - App creates tables → Session is provided per request → Route uses and returns data → Session always closed properly.
+"
+
 #! Get todo by ID
 "
 @app.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)
