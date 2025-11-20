@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 
@@ -24,3 +25,19 @@ class Todos(Base):
     priority = Column(Integer)
     complete = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"))
+    
+# ---------------------------------------------------------------------------------
+
+#! Output Model Schema
+
+class UserProfile(BaseModel):
+    id: int
+    email: str
+    username: str
+    first_name: str
+    last_name: str
+    role: str
+    is_active: bool
+
+    class Config:
+        from_attributes = True
