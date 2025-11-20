@@ -58,7 +58,7 @@ async def read_todo(user: user_dependency, db: db_dependency, todo_id: int = Pat
     
     if todo_model is not None:
         return todo_model
-    raise HTTPException(status_code=404, detail='Todo not found.')
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Todo not found.')
 
 
 #! In Swagger, beside the api endpoint, you will see a lock icon because as of now, only this endpoint is protected by the auth feature implemented using jwt and requires the user to be logged in.
