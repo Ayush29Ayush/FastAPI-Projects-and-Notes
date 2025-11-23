@@ -1794,3 +1794,80 @@ async def change_password(user: user_dependency, db: db_dependency, user_verific
     db.add(user_model)
     db.commit()
 "
+
+---------------------------------------------------------------------------------------------------------
+
+#! Production DBMS
+
+1. You can choose between PostgreSQL or MySQL if you need production grade DBMS.
+2. For small projects, you can use SQLite.
+
+#! PostgreSQL Create Database Tables
+
+1. Refer SQL Scripts folder.
+
+#! FastAPI Connect to PostgreSQL
+
+1. pip install psycopg2-binary
+2. change database.py
+"
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+
+SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:Ab%40123456@localhost:5432/TodoApplicationDatabase'
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+"
+
+#! FastAPI Connect to MySQL
+
+1. pip install pymysql
+2. change database.py
+
+---------------------------------------------------------------------------------------------------------
+
+#! Alembic Data Migration Overview
+
+- Alembic is a lightweight tool which manages database migrations for SQLAlchemy/SQLModel in FastAPI projects.
+- Initialize Alembic with `alembic init migrations` and set your DB URL in `alembic.ini`.
+- Set `target_metadata` in `env.py` to your models' metadata for autogenerate.
+- Create migration: `alembic revision --autogenerate -m "message"`.
+- Apply migration: `alembic upgrade head`.
+- Always review generated migration files before applying.
+
+#! Alembic Introduction
+
+### What is Alembic?
+- Lightweight database migration tool for use with SQLAlchemy.
+- Helps manage schema changes safely over time.
+- Install with: `pip install alembic`
+
+### How does Alembic work?
+- On initialization, creates two items:
+  - `alembic.ini` (configuration file)
+  - `alembic/` directory (migration scripts and environment)
+- Enables upgrading, downgrading, and maintaining data integrity.
+
+### Alembic Command Summary
+
+| Command                     | Description                                        |
+|-----------------------------|----------------------------------------------------|
+| `alembic init <folder>`     | Initialize Alembic environment                     |
+| `alembic revision -m <msg>` | Create new migration revision with a message       |
+| `alembic upgrade <revision>`| Apply migration to upgrade database to a version   |
+| `alembic downgrade -1`      | Revert to previous migration (downgrade one step)  |
+
+### Files Explained
+- **alembic.ini:** Main config file for Alembic, set database URL and other settings here.
+- **alembic directory:** Contains migration scripts and environment configuration to run migrations.
+
+#! Alembic Installation and Steps
+
+1. pip install alembic
+2. cd Project-3/TodoApp
+3. alembic init alembic
