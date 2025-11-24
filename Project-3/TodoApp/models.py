@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 from database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
@@ -14,6 +15,7 @@ class Users(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     role = Column(String)
+    phone_number = Column(String)
 
 
 class Todos(Base):
@@ -36,6 +38,7 @@ class UserProfile(BaseModel):
     username: str
     first_name: str
     last_name: str
+    phone_number: Optional[str] = None
     role: str
     is_active: bool
 
