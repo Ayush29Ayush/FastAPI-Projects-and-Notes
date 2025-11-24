@@ -1970,3 +1970,73 @@ class UserProfile(BaseModel):
 
 #! Alembic Downgrade
 6. Run `alembic downgrade -1` to undo the last migration
+
+--------------------------------------------------------------------------------------------------
+
+#? Project - 4 (Unit and Integration Testing)
+
+#! Testing Overview
+
+# Testing in Software Development
+
+**Testing** is a way to ensure applications work as intended. It is a critical part of the Software Development Lifecycle (SDLC) that aims to identify bugs, errors, and defects while verifying that software meets user requirements and specifications. The goal is to ensure software is high quality, reliable, secure, and user-friendly.
+
+## Types of Testing
+
+### Manual Testing
+Testing performed by humans interacting with the application without automation.
+
+### Unit Testing
+Unit testing involves testing individual components or units of software in isolation from the rest of the application. It validates that each unit of the software performs as designed. A "unit" refers to any testable part of the application. Developers write unit tests during the development phase, and these tests are automated and executed by testing frameworks like Pytest. The primary benefit is identifying bugs early in the development process.
+
+### Integration Testing
+Integration testing focuses on testing the interactions between different units or components of software. The scope is broader than unit testing, as it tests multiple units together. This helps identify problems for the entire solution. For example, calling an API endpoint and verifying that the correct response is returned is an integration test.
+
+## Pytest Framework
+
+**Pytest** is a popular testing framework for Python known for its simplicity, scalability, and ability to handle both unit and integration tests.
+
+### Top Reasons to Use Pytest
+
+**Simple & Flexible:** Pytest uses native Python assertions (like `assert response.status_code == 200`), making tests easy to write and read.
+
+**Fixtures:** Pytest provides fixtures for setup and teardown operations, allowing you to configure test environments efficiently. For example, you can create a test database fixture that is initialized before tests run and cleaned up afterward.
+
+**Parameterized Testing:** Pytest allows you to run the same test with different input data, reducing code duplication and improving test coverage.
+
+## Testing FastAPI Applications
+
+FastAPI provides built-in testing support using `TestClient` from `fastapi.testclient`. This client allows you to make HTTP requests to your FastAPI application without running a live server.
+
+### Basic Test Example
+
+```python
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+app = FastAPI()
+
+@app.get("/")
+async def read_main():
+    return {"msg": "Hello World"}
+
+client = TestClient(app)
+
+def test_read_main():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"msg": "Hello World"}
+```
+
+
+### Integration Testing with Dependencies
+
+FastAPI allows you to override dependencies during testing using `app.dependency_overrides`. This is useful for mocking authentication, databases, or external services.
+
+```python
+# Mock authentication in tests
+def mock_get_auth():
+    return TokenData(username="testuser")
+
+app.dependency_overrides[get_auth] = mock_get_auth
+```
