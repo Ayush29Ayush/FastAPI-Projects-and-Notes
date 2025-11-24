@@ -50,3 +50,12 @@ async def change_password(user: user_dependency, db: db_dependency, user_verific
     user_model.hashed_password = bcrypt_context.hash(user_verification.new_password)
     db.add(user_model)
     db.commit()
+    
+@router.put("/phonenumber/{phone_number}", status_code=status.HTTP_204_NO_CONTENT)
+async def change_phonenumber(user: user_dependency, db: db_dependency, phone_number: str):
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Authentication Failed')
+    user_model = db.query(Users).filter(Users.id == user.get('id')).first()
+    user_model.phone_number = phone_number
+    db.add(user_model)
+    db.commit()
