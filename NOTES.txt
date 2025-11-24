@@ -2040,3 +2040,10 @@ def mock_get_auth():
 
 app.dependency_overrides[get_auth] = mock_get_auth
 ```
+
+#! Pytest Basics
+
+1. pip install pytest
+2. Create a folder named "test" and a __init__.py file inside it
+3. Create a python file named "test_example.py" inside a folder named "test"
+4. In terminal, run pytest
