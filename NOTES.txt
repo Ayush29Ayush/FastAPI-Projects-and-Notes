@@ -1871,3 +1871,102 @@ Base = declarative_base()
 1. pip install alembic
 2. cd Project-3/TodoApp
 3. alembic init alembic
+
+#! Alembic Command Overview - revisions, upgrades, and downgrades
+
+### 1. Alembic Revision
+- **What it is**: A command to generate a new migration file (revision script) representing a change to the database schema (e.g., adding a table or column).
+- **Function**: It creates a file in the `versions` directory with a unique **Revision ID**. This file contains two main functions: `upgrade()` for applying changes and `downgrade()` for reverting them.
+- **Usage Example**:
+  ```bash
+  alembic revision -m "create phone number col on users table"
+  ```
+
+### 2. Alembic Upgrade
+- **What it is**: The command to actually apply the pending migration(s) to the database.
+- **Function**: Executes the logic defined in the `upgrade()` function of the revision file.
+- **Effect**: Modifies the database schema (e.g., adding a `phone_number` column) without altering existing data.
+- **Usage Example**:
+  ```bash
+  alembic upgrade <revision id>
+  # Or to upgrade to the latest version:
+  alembic upgrade head
+  ```
+
+### 3. Alembic Downgrade
+- **What it is**: The command to revert a previously applied migration.
+- **Function**: Executes the logic defined in the `downgrade()` function of the revision file.
+- **Effect**: Undoes schema changes (e.g., drops the `phone_number` column). Note that **data in the removed column will be lost**.
+- **Usage Example**:
+  ```bash
+  # Revert the last single migration
+  alembic downgrade -1
+  ```
+
+### Summary Table
+
+| Term | Description | Command Example |
+| :--- | :--- | :--- |
+| **Revision** | Creates a new migration file with a unique ID. Used to define schema changes. | `alembic revision -m "message"` or `alembic revision --autogenerate -m "message"` |
+| **Upgrade** | Applies the migration to the database, moving it forward to a newer version. | `alembic upgrade head` or `alembic upgrade <revision_id>` |
+| **Downgrade** | Reverts the database to a previous state by undoing the last migration. | `alembic downgrade -1` |
+
+#! Alembic Revision and Upgrade
+
+1. Go to alembic.ini and find sqlalchemy.url and set it to your database URL.
+2. Go to alembic/env.py, import models and set from "target_metadata = None" to "target_metadata = models.Base.metadata".
+
+3. Add phone number column to users table in models.py
+"
+from typing import Optional
+from pydantic import BaseModel
+from database import Base
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+
+
+class Users(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True)
+    username = Column(String, unique=True)
+    first_name = Column(String)
+    last_name = Column(String)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    role = Column(String)
+    phone_number = Column(String)
+
+
+class Todos(Base):
+    __tablename__ = 'todos'
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(String)
+    priority = Column(Integer)
+    complete = Column(Boolean, default=False)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    
+# ---------------------------------------------------------------------------------
+
+#! Output Model Schema
+
+class UserProfile(BaseModel):
+    id: int
+    email: str
+    username: str
+    first_name: str
+    last_name: str
+    phone_number: Optional[str] = None
+    role: str
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+"
+4. Run `alembic revision -m "create phone number col on users table"` or `alembic revision --autogenerate -m "create phone number col on users table"`
+5. Run `alembic upgrade head`
+
+#! Alembic Downgrade
+6. Run `alembic downgrade -1` to undo the last migration
