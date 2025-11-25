@@ -2047,3 +2047,28 @@ app.dependency_overrides[get_auth] = mock_get_auth
 2. Create a folder named "test" and a __init__.py file inside it
 3. Create a python file named "test_example.py" inside a folder named "test"
 4. In terminal, run pytest
+
+#! Pytest Objects and Fixtures Overview
+
+*   **Fixtures as Setup:**
+    *   Use the `@pytest.fixture` decorator to define a function that prepares data or state before a test runs.
+    *   This setup phase (like creating a `Student` object) is separated from the actual test logic, keeping tests clean and focused.
+
+*   **Dependency Injection:**
+    *   Tests access fixtures by declaring them as input arguments (e.g., def test_person_initialization(default_employee)).
+    *   Pytest automatically executes the fixture function (`default_employee`) and passes its return value (the `Student` instance) to the test function.
+
+*   **Reusability:**
+    *   The `default_employee` fixture can be reused across multiple tests. If another test needs a standard student object, you just add `default_employee` as an argument, avoiding repeated code.
+
+*   **Test Object Verification:**
+    *   The test function asserts that the properties of the object returned by the fixture (`first_name`, `last_name`, `major`, `years`) match expected values ("John", "Doe", "Computer Science", 3).
+
+**Code Summary:**
+The code defines a `Student` class, creates a standard instance via a fixture (`default_employee`), and then verifies that the instance was initialized correctly in `test_person_initialization`.
+
+#! Pytest - Todos and Utils File
+
+1. Create a `test_todos.py` file in the `test` folder.
+2. Create a `test_example.py` file in the `test` folder.
+3. Create a `utils.py` file in the `test` folder which will be used for Dependency Injection
