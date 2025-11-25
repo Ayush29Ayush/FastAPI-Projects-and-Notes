@@ -2067,8 +2067,7 @@ app.dependency_overrides[get_auth] = mock_get_auth
 **Code Summary:**
 The code defines a `Student` class, creates a standard instance via a fixture (`default_employee`), and then verifies that the instance was initialized correctly in `test_person_initialization`.
 
-#! Pytest - Todos and Utils File
+#! Pytest - Test and Utils File
 
-1. Create a `test_todos.py` file in the `test` folder.
-2. Create a `test_example.py` file in the `test` folder.
-3. Create a `utils.py` file in the `test` folder which will be used for Dependency Injection
+1. Create a `utils.py` file in the `test` folder which will be used for Dependency Injection
+2. Refer to files inside test folder which start with `test_`
