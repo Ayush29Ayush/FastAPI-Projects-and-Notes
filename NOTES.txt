@@ -2071,3 +2071,312 @@ The code defines a `Student` class, creates a standard instance via a fixture (`
 
 1. Create a `utils.py` file in the `test` folder which will be used for Dependency Injection
 2. Refer to files inside test folder which start with `test_`
+
+------------------------------------------------------------------------------------------
+
+#? Project - 5 (Full-Stack Application)
+
+#! Jinja Notes
+
+***
+
+## Jinja and FastAPI: Professional Notes
+
+### 1. **What is Jinja?**
+- **Jinja** is a fast, expressive, and extensible templating engine for Python, allowing separation of business logic from presentation by letting you generate dynamic HTML (or other text formats) using templates. It is widely used in many web frameworks, including FastAPI and Flask.
+
+***
+
+### 2. **Jinja Integration in FastAPI**
+
+**Setup Example:**
+```python
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "data": "Hello World"})
+```
+- Templates are stored in a **/templates** folder.
+- For assets (CSS/JS), use **/static** with `StaticFiles`.
+
+***
+
+### 3. **Jinja Templating Syntax**
+
+- **Expressions:** `{{ variable }}` – Outputs the value of `variable`.
+- **Statements/Logic:** `{% ... %}` – For flow control (loops, conditions).
+- **Comments:** `{# ... #}` – Non-rendered comments.
+
+**Examples:**
+```html
+<!-- Loop -->
+{% for item in items %}
+  <p>{{ item }}</p>
+{% endfor %}
+
+<!-- Condition -->
+{% if user.is_authenticated %}
+  <span>Welcome, {{ user.name }}</span>
+{% else %}
+  <a href="/login">Login</a>
+{% endif %}
+```
+- **Variable Assignment:** `{% set x = 5%}`
+- **Math:** `{{ a + b }}` (`+`, `-`, `*`, `/`, `%`, `//`)
+- **Comparisons:** `==`, `!=`, `>`, `<`, `>=`, `<=`
+- **Logic:** `and`, `or`, `not`
+
+***
+
+### 4. **Template Inheritance**
+
+- Define a base template for reusability:
+```html
+<!-- base.html -->
+<html>
+  <head>{% block head %}{% endblock %}</head>
+  <body>
+    {% block content %}{% endblock %}
+  </body>
+</html>
+```
+- Extend base and override blocks in child templates:
+```html
+{% extends "base.html" %}
+{% block head %}
+  <title>Home</title>
+{% endblock %}
+{% block content %}
+  <h1>Hello from Child!</h1>
+{% endblock %}
+```
+
+***
+
+### 5. **Rendering Dynamic Data**
+
+- In your FastAPI endpoint, supply a context dictionary to the template. Jinja updates the rendered HTML with context variables:
+```python
+return templates.TemplateResponse("page.html", {"request": request, "username": username, "items": items})
+```
+
+***
+
+### 6. **Best Practices for Using Jinja with FastAPI**
+
+- **Organize Templates:** Structure templates by resource or feature (e.g., users/, posts/).
+- **Use Inheritance:** Apply a base template with common UI elements.
+- **Minimal Logic:** Avoid complex calculations in templates. Keep templates focused on display, move business logic to Python.
+- **Use Filters Sparingly:** For formatting output but not for processing data.
+- **Autoescaping:** Be explicit to prevent XSS; use Jinja's autoescape feature, especially for user input.
+- **Static Assets:** Mount and reference static assets for organized management.
+- **Consistent Naming:** Follow a convention for template and variable names to ensure maintainability and clarity.
+- **Comments:** Annotate templates for clarity using Jinja comments `{# ... #}`.
+
+***
+
+### 7. **Practical Example: Form Handling**
+
+- Render HTML forms in templates.
+- Use FastAPI to process submitted form data, then render a result/confirmation page using Jinja, passing any required context back to the user.[3]
+
+***
+
+### 8. **Common Jinja Filters & Functions**
+
+- **Filters:** `{{ variable | filter }}` (e.g. `|capitalize`, `|lower`, `|replace("a", "b")`)
+- **Built-in Functions:** `range()`, `dict()`, `list()`, etc. are accessible for common needs.
+
+***
+
+### 9. **References**
+
+- FastAPI Documentation: [Templates - FastAPI]
+- Jinja2 Documentation: [Jinja Official Docs]
+- Real-World Tutorials: RealPython, GeeksforGeeks, YouTube FastAPI + Jinja2 tutorials.
+
+***
+
+**Summary Table: Jinja Tags and Purpose**
+
+| Tag Type       | Syntax              | Purpose                  |
+| -------------- | ------------------- | ------------------------ |
+| Expression     | `{{ ... }}`         | Output a value           |
+| Statement      | `{% ... %}`         | Logic (if, for, etc)     |
+| Comment        | `{# ... #}`         | Ignore/comment           |
+| Inheritance    | `{% extends ... %}` | Template inheritance     |
+| Block          | `{% block ... %}`   | Define override section  |
+
+***
+
+**This structure ensures your notes cover both the practical application and professional best practices for using Jinja in your FastAPI projects.**
+
+## Jinja & FastAPI Advanced Usage
+
+### **A. Handling HTML Forms with FastAPI + Jinja2**
+
+#### **Form Example:**
+
+**HTML Template (templates/form.html)**
+```html
+<form method="post" action="/submit/">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name">
+  <button type="submit">Submit</button>
+</form>
+```
+
+**FastAPI Endpoint**
+```python
+from fastapi import FastAPI, Request, Form
+from fastapi.templating import Jinja2Templates
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/form/")
+async def form(request: Request):
+    return templates.TemplateResponse("form.html", {"request": request})
+
+@app.post("/submit/")
+async def submit(request: Request, name: str = Form(...)):
+    # process the submitted form value
+    return templates.TemplateResponse("result.html", {"request": request, "name": name})
+```
+**Result Template (result.html)**
+```html
+<h2>Submitted Name: {{ name }}</h2>
+```
+- Jinja templates receive the submitted form value in the context.
+- Use `{% if ... %}` to conditionally show form errors or success messages.
+
+***
+
+### **B. Using Jinja Filters for Formatting Output**
+
+**Filters Example:**
+```html
+<!-- Capitalize and replace -->
+<p>{{ username|capitalize }}</p>
+<p>{{ bio|replace("Python", "FastAPI") }}</p>
+
+<!-- Format numbers -->
+<p>Price: {{ price|round(2) }}</p>
+
+<!-- Date formatting (custom filter needed for Python datetime objects) -->
+<p>Joined at: {{ joined_at|strftime("%Y-%m-%d") }}</p>
+```
+- Built-in filters: `capitalize`, `lower`, `title`, `replace`, `length`, `list`, `dict`, `join`, `default`, `safe` (render without escaping), `round`, etc.
+- For dates, register a custom Jinja filter with a Python function, then use in templates.
+
+***
+
+### **C. Static Files and Asset Management**
+
+**Mounting Static Files in FastAPI:**
+```python
+from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+```
+
+**Referencing Static Assets in Jinja Template:**
+```html
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles.css') }}">
+<img src="{{ url_for('static', path='images/logo.png') }}" alt="Logo">
+```
+- Put your CSS/JS/images in the **static/** directory.
+- Use `url_for('static', path='...')` for asset paths so deployment works regardless of base URL.
+- For cache busting, append a version/hash query if needed.
+
+***
+
+### **D. Advanced Jinja Template Features**
+
+#### **Macros for Reusable Components**
+
+```html
+{% macro render_input(name, value='') %}
+  <input type="text" name="{{ name }}" value="{{ value }}">
+{% endmacro %}
+
+{{ render_input("username") }}
+```
+
+#### **Custom Filters Registration**
+
+In your FastAPI `main.py`:
+```python
+import datetime
+
+def format_date(value, format="%Y-%m-%d"):
+    if isinstance(value, datetime.date):
+        return value.strftime(format)
+    return value
+
+templates.env.filters["format_date"] = format_date
+
+# In template
+<p>Created at: {{ created_at|format_date("%d/%m/%Y") }}</p>
+```
+
+***
+
+### **E. Full Example: Dynamic Data + Conditionals + Static Assets**
+
+**home.html**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', path='main.css') }}">
+  <title>Todo List</title>
+</head>
+<body>
+  <h1>Welcome, {{ username|title }}</h1>
+  <ul>
+    {% for todo in todos %}
+      <li>
+        {{ todo.description|capitalize }} - Priority: {{ todo.priority }}
+        {% if todo.complete %}
+          <span class="done">Done</span>
+        {% else %}
+          <span class="pending">Pending</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
+```
+**FastAPI endpoint**
+```python
+@app.get("/todos/")
+async def todos(request: Request):
+    username = "ayush"
+    todos = [
+        {"description": "buy milk", "priority": 2, "complete": False},
+        {"description": "deploy app", "priority": 5, "complete": True},
+    ]
+    return templates.TemplateResponse("home.html", {"request": request, "username": username, "todos": todos})
+```
+
+***
+
+### **F. Useful Jinja Patterns for FastAPI Projects**
+
+- Use `{% include "partial.html" %}` for modular templates.
+- Leverage blocks and inheritance for maintainable layouts.
+- Apply comments `{# ... #}` for template documentation.
+- Sanitize user-input data with auto-escaping by default.
+
+***
