@@ -2425,3 +2425,75 @@ app.include_router(users.router)
 1. Create a directory named templates.
 2. Add html template files in the templates directory.
 3. Update main.py and other routes files by adding templates and their respective endpoints.
+
+------------------------------------------------------------------------------------------------------
+
+#? Deployment
+
+#! Render
+
+1. Login to your render account.
+2. Select "Add new" and then "Web service".
+3. Link your GitHub repository.
+4. Fill in the required details like region, build command, environment variables, start command, etc.
+5. Click "Create web service".
+6. Click on the link provided to access your website.
+7. Use sqlite as the database if you don't want to use production database like Postgres.
+
+
+#! Free Hosted PostgreSQL Databases (2025)
+
+## Summary
+- Aiven is the top choice for an always-on, standard database, especially with its Bangalore region.
+- Neon is best for serverless dev/hobby projects that can tolerate cold starts.
+- Supabase is great if you also need backend services like auth.
+- Render is NOT recommended for free projects due to its 30-day data deletion policy.
+- ElephantSQL is no longer available (End of Life: Jan 2025).
+
+---
+
+## Top Recommendations (Permanent Free Tier)
+
+### 1. Aiven
+- **Deal:** 1 Node, 1 CPU, 1 GB RAM, 5 GB Storage.
+- **Inactivity Policy:** Always On. No pausing.
+- **Good For:** Standard projects that need a reliable, always-on database.
+- **Notes:** Free tier is on DigitalOcean. Bangalore region is available [web:3].
+
+### 2. Neon
+- **Deal:** 1 Project, 0.5 vCPU, 3 GB storage.
+- **Inactivity Policy:** Pauses after 5 minutes of inactivity. Wakes automatically on connection.
+- **Good For:** Serverless applications, development, projects with sporadic traffic.
+- **Notes:** The first connection after a pause will have a "cold start" delay (~1 second) [web:29].
+
+### 3. Supabase
+- **Deal:** 2 free projects, 500 MB database, 5 GB bandwidth.
+- **Inactivity Policy:** Pauses after 7 days of inactivity. Requires manual un-pausing from the dashboard.
+- **Good For:** Full backend-as-a-service (provides Auth, APIs, etc.).
+- **Notes:** The database becomes read-only if you exceed the 500 MB storage limit [web:7]. Mumbai region is available.
+
+---
+
+## Services with Critical Limitations
+
+### 4. Render
+- **Deal:** 1 GB storage.
+- **Inactivity Policy:** DELETED after 30 days.
+- **Warning:** Data is permanently lost after 30 days unless you upgrade to a paid plan. This is a change from their previous 90-day policy [web:26]. Not suitable for any long-term project.
+
+### 5. Koyeb
+- **Deal:** 50 active hours per month.
+- **Warning:** A 24/7 application requires ~720 hours/month. The free tier is only for services that run intermittently or for very short periods [web:22].
+
+---
+
+## Comparison Table (Markdown)
+
+| Service | Storage | Inactivity Policy | Key "Gotcha" | Region Advantage (for India) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Aiven** | 5 GB | Always On | None | **Bangalore** [web:3] |
+| **Neon** | 3 GB | Pauses after 5 mins | Cold start latency | Singapore |
+| **Supabase**| 500 MB | Pauses after 1 week | Read-only if full | Mumbai |
+| **Render** | 1 GB | **Deletes** after 30 days | **Data loss risk** | N/A due to policy |
+
+------------------------------------------------------------------------------------------------------
