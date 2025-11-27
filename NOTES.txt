@@ -2419,3 +2419,9 @@ app.include_router(users.router)
 1. Create a directory named static.
 2. Add folders named css and js to the static directory and put your CSS and JS files there.
 3. Update main.py by adding static assets
+
+#! Full-Stack Application - Routes and Templates
+
+1. Create a directory named templates.
+2. Add html template files in the templates directory.
+3. Update main.py and other routes files by adding templates and their respective endpoints.
