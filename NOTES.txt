@@ -2413,3 +2413,9 @@ app.include_router(todos.router)
 app.include_router(admin.router)
 app.include_router(users.router)
 "
+
+#! Full-Stack Application - CSS and JS
+
+1. Create a directory named static.
+2. Add folders named css and js to the static directory and put your CSS and JS files there.
+3. Update main.py by adding static assets
