@@ -1,3 +1,5 @@
+FastAPI Official Documentation Full Stack Template => https://fastapi.tiangolo.com/project-generation/
+
 Course reference => https://www.udemy.com/course/fastapi-the-complete-course/
 
 #! Create a Virtual Environment
